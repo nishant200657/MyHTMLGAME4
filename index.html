@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shooting Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+            background-color: #222;
+        }
+        .controls {
+            position: fixed;
+            bottom: 100px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+        }
+        .button {
+            width: 100px;
+            height: 100px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .button:active {
+            background-color: #555;
+        }
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .start-screen h1 {
+            margin: 20px;
+            font-size: 36px;
+        }
+        .start-screen p {
+            margin: 10px;
+            font-size: 18px;
+        }
+        .start-screen a {
+            color: cyan;
+            text-decoration: none;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .start-button {
+            padding: 15px 30px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .score {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- Buttons for Controls -->
+<div class="controls">
+    <button class="button" id="leftButton">←</button>
+    <button class="button" id="rightButton">→</button>
+</div>
+
+<!-- Score Display -->
+<div class="score" id="score">Score: 0</div>
+
+<!-- Start Screen -->
+<div class="start-screen" id="startScreen">
+    <h1>Welcome to the Shooting Game</h1>
+    <p>Created by Nishant Gupta</p>
+    <a href="https://www.instagram.com/free_fire_editer_2006/" target="_blank">Follow me on Instagram</a>
+    <button class="start-button" id="startButton">Start Game</button>
+</div>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let player = {
+        x: canvas.width / 2,
+        y: canvas.height - 120,
+        width: 50,
+        height: 50,
+        speed: 5,
+        dx: 0
+    };
+
+    let bullets = [];
+    let enemies = [];
+    let score = 0;
+    let gameOver = false;
+
+    const scoreElement = document.getElementById("score");
+    const startScreen = document.getElementById("startScreen");
+    const startButton = document.getElementById("startButton");
+
+    // Function to create new enemies
+    function createEnemy() {
+        const enemy = {
+            x: Math.random() * (canvas.width - 40),
+            y: 0,
+            width: 40,
+            height: 40,
+            speed: Math.random() * 2 + 2
+        };
+        enemies.push(enemy);
+    }
+
+    // Function to create bullets
+    function createBullet() {
+        const bullet = {
+            x: player.x + player.width / 2 - 5,
+            y: player.y,
+            width: 10,
+            height: 20,
+            speed: 6
+        };
+        bullets.push(bullet);
+    }
+
+    // Function to move player
+    function movePlayer() {
+        player.x += player.dx;
+        if (player.x < 0) player.x = 0;
+        if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+    }
+
+    // Function to move bullets
+    function moveBullets() {
+        for (let i = 0; i < bullets.length; i++) {
+            bullets[i].y -= bullets[i].speed;
+            if (bullets[i].y < 0) bullets.splice(i, 1);
+        }
+    }
+
+    // Function to move enemies
+    function moveEnemies() {
+        for (let i = 0; i < enemies.length; i++) {
+            enemies[i].y += enemies[i].speed;
+            if (enemies[i].y > canvas.height) {
+                enemies.splice(i, 1);
+            }
+        }
+    }
+
+    // Function to detect collisions
+    function detectCollisions() {
+        for (let i = 0; i < bullets.length; i++) {
+            for (let j = 0; j < enemies.length; j++) {
+                if (
+                    bullets[i].x < enemies[j].x + enemies[j].width &&
+                    bullets[i].x + bullets[i].width > enemies[j].x &&
+                    bullets[i].y < enemies[j].y + enemies[j].height &&
+                    bullets[i].y + bullets[i].height > enemies[j].y
+                ) {
+                    bullets.splice(i, 1);
+                    enemies.splice(j, 1);
+                    score += 10;
+                    scoreElement.textContent = `Score: ${score}`;
+                    break;
+                }
+            }
+        }
+
+        for (let i = 0; i < enemies.length; i++) {
+            if (
+                player.x < enemies[i].x + enemies[i].width &&
+                player.x + player.width > enemies[i].x &&
+                player.y < enemies[i].y + enemies[i].height &&
+                player.y + player.height > enemies[i].y
+            ) {
+                gameOver = true;
+                alert(`Game Over! Your Score: ${score}`);
+                location.reload();
+            }
+        }
+    }
+
+    // Function to draw the player
+    function drawPlayer() {
+        ctx.fillStyle = "blue";
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    // Function to draw bullets
+    function drawBullets() {
+        ctx.fillStyle = "yellow";
+        for (let i = 0; i < bullets.length; i++) {
+            ctx.fillRect(bullets[i].x, bullets[i].y, bullets[i].width, bullets[i].height);
+        }
+    }
+
+    // Function to draw enemies
+    function drawEnemies() {
+        ctx.fillStyle = "red";
+        for (let i = 0; i < enemies.length; i++) {
+            ctx.fillRect(enemies[i].x, enemies[i].y, enemies[i].width, enemies[i].height);
+        }
+    }
+
+    // Game update function
+    function update() {
+        if (gameOver) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        movePlayer();
+        moveBullets();
+        moveEnemies();
+        detectCollisions();
+
+        drawPlayer();
+        drawBullets();
+        drawEnemies();
+
+        requestAnimationFrame(update);
+    }
+
+    // Button Event Listeners
+    const leftButton = document.getElementById("leftButton");
+    const rightButton = document.getElementById("rightButton");
+
+    leftButton.addEventListener("mousedown", () => {
+        player.dx = -player.speed;
+    });
+    rightButton.addEventListener("mousedown", () => {
+        player.dx = player.speed;
+    });
+
+    leftButton.addEventListener("mouseup", () => {
+        player.dx = 0;
+    });
+    rightButton.addEventListener("mouseup", () => {
+        player.dx = 0;
+    });
+
+    leftButton.addEventListener("touchstart", () => {
+        player.dx = -player.speed;
+    });
+    rightButton.addEventListener("touchstart", () => {
+        player.dx = player.speed;
+    });
+
+    leftButton.addEventListener("touchend", () => {
+        player.dx = 0;
+    });
+    rightButton.addEventListener("touchend", () => {
+        player.dx = 0;
+    });
+
+    // Start the game
+    startButton.addEventListener("click", () => {
+        startScreen.style.display = "none";
+        setInterval(() => {
+            if (!gameOver) {
+                createEnemy();
+            }
+        }, 1000);
+        setInterval(() => {
+            if (!gameOver) {
+                createBullet();
+            }
+        }, 300);
+        update();
+    });
+</script>
+
+</body>
+</html>
